@@ -1,0 +1,568 @@
+#atom_style bond #no stiffness
+atom_style angle #with stiffness
+
+boundary        p p p
+###
+# Pair interactions require lists of neighbours to be calculated
+###
+
+#neighbor 0.3 bin
+neighbor 4 bin
+
+neigh_modify every 1 delay 1 check yes
+atom_modify sort 0 0
+### Generate RESTART file, SPECIAL format, not a .txt file ###
+### Useful if simulation crashes ###
+
+restart 1000000 N5B4/trial2/restarts/$f.restart
+restart 1000000 N5B4/trial2/restarts/bb187nuc5bl31bn4d30tot500V2.restart
+#############################
+
+
+
+### READ "start" data file ###
+
+read_data N5B4/trial2/dats2/$f.dat
+read_data N5B4/trial2/dats2/bb187nuc5bl31bn4d30tot500V2.dat
+Reading data file ...
+  orthogonal box = (-1000 -1000 -1000) to (1000 1000 1000)
+  1 by 1 by 1 MPI processor grid
+  reading atoms ...
+  497 atoms
+  scanning bonds ...
+  3 = max bonds/atom
+  scanning angles ...
+  6 = max angles/atom
+  reading bonds ...
+  496 bonds
+  reading angles ...
+  510 angles
+Finding 1-2 1-3 1-4 neighbors ...
+  special bond factors lj:    0        0        0       
+  special bond factors coul:  0        0        0       
+     4 = max # of 1-2 neighbors
+     4 = max # of 1-3 neighbors
+     8 = max # of 1-4 neighbors
+    12 = max # of special neighbors
+  special bonds CPU = 0.001 seconds
+  read_data CPU = 0.088 seconds
+
+######################
+
+### READ "REstart" data file ###
+
+######################
+
+
+
+###
+# Define groups (atom type 1 is group 'all')
+###
+group all type 1
+497 atoms in group all
+
+
+###
+# Dump configs - "simple dumpings"
+###
+
+###
+# Dump configs + box coords
+###
+
+dump   1   all   custom   1000  N5B4/trial2/trjs/$f.lammpstrj  id  x y z  ix iy iz
+dump   1   all   custom   1000  N5B4/trial2/trjs/bb187nuc5bl31bn4d30tot500V2.lammpstrj  id  x y z  ix iy iz
+dump_modify   1   format line "%d %.5f %.5f %.5f %d %d %d"
+
+########################################################################
+
+
+###################################################################
+# Stiffness term
+#
+# E = K * (1+cos(theta)), K>0
+#
+angle_style   cosine
+#change this coefficient to change stiffness (e.g. 1,5,10)
+angle_coeff   1 1.0
+###################################################################
+
+###################################################################
+# Pair interaction between non-bonded atoms
+#
+#  Lennard-Jones 12-6 potential with cutoff:
+#  potential E=4epsilon[ (sigma/r)^12 - (sigma/r)^6]  for r<r_cut
+#
+#  1.12246 = 2^(1/6) is the minimum of the potential
+
+
+pair_style      lj/cut 1.12246152962189
+#pair_style      lj/cut 3
+
+#
+#  pair_modify shift yes adds a constant to the potential such
+
+#  that E(r_cut)=0. Forces remains unchanged.
+#
+
+pair_modify     shift yes
+
+#
+#  pair_coeff for lj/cut, specify 4:
+#    * atom type interacting with
+#    * atom type
+#    * epsilon (energy units)
+#    * sigma (distance units)
+#
+
+pair_coeff      1 1 1.0 1.0
+###################################################################
+
+###################################################################
+# Pair interaction between non-bonded atoms
+#
+#  soft potential, for PUSHING apart overlapping atoms
+#  potential E=A*(1 + cos(pi*r/r_c))
+#
+#  1.12246 = 2^(1/6) is the cut-off r_c
+
+#pair_style     soft 1.12246152962189
+
+#
+#  pair_coeff for soft, specify 3:
+#    * atom type interacting with
+#    * atom type
+#    * A
+#
+#
+
+#pair_coeff      1 1 100.0
+###################################################################
+
+###################################################################
+# Pair interaction between bonded atoms
+#
+# Fene potential + Lennard Jones 12-6:
+
+#
+#  E= - 0.5 K R0^2 ln[ 1- (r/R0)^2]
+#     + 4epsilon[ (sigma/r)^12 - (sigma/r)^6] + epsilon
+#
+
+bond_style   fene
+
+
+#
+# For style fene, specify:
+#   * bond type
+#   * K (energy/distance^2)
+#   * R0 (distance)
+#   * epsilon (energy)  (LJ component)
+#   * sigma (distance)  (LJ component)
+#
+
+
+special_bonds fene #<=== I M P O R T A N T (new command)
+Finding 1-2 1-3 1-4 neighbors ...
+  special bond factors lj:    0        1        1       
+  special bond factors coul:  0        1        1       
+     4 = max # of 1-2 neighbors
+    12 = max # of special neighbors
+  special bonds CPU = 0.000 seconds
+
+bond_coeff   1   30   2   1.0   1.0
+
+
+###################################################
+
+###################################################################
+# Pair interaction between bonded atoms
+#
+# Harmonic potential:
+#
+#  E= K * (R-R0)^2
+#
+
+#bond_style   harmonic
+
+#
+# For style harmonic, specify:
+#   * bond type
+#   * K (energy/distance^2)
+#   * R0 (distance)
+#
+
+#bond_coeff   1   60.0   1.0
+#bond_coeff   2   harmonic 0.1   1.0
+
+###################################################
+compute 1 all gyration
+variable rog equal c_1
+#compute 2 all coord/atom cutoff 1.1
+
+#dump 2 all custom 10000 contact_number.dump id c_2
+
+
+###
+# Set up fixes
+###
+thermo_style   custom   step  temp enthalpy c_1
+fix 1 all nve   ###NVE ensemble
+
+fix 2 all   langevin   1.0 1.0 1.0  778655   ###Langevin integrator Tstart Tstop 1/friction rndseed
+
+
+##### Sample thermodynamic info  (temperature, energy, pressure, etc.) #####
+thermo 1000
+
+
+
+
+
+
+
+
+
+############################################################################
+
+###
+# set timestep of integrator
+
+timestep 0.01
+
+###
+# run integration for a number of steps
+###
+#run 0
+#variable r equal c_1
+#if "$r < 63.1" then "quit 1"
+
+# lj potential minimum, cause molecule to explore
+run 100000
+Generated 0 of 0 mixed pair_coeff terms from geometric mixing rule
+Last active /omp style is angle_style cosine/omp
+Neighbor list info ...
+  update: every = 1 steps, delay = 1 steps, check = yes
+  max neighbors/atom: 2000, page size: 100000
+  master list distance cutoff = 5.1224615
+  ghost atom cutoff = 5.1224615
+  binsize = 2.5612308, bins = 781 781 781
+  1 neighbor lists, perpetual/occasional/extra = 1 0 0
+  (1) pair lj/cut/omp, perpetual
+      attributes: half, newton on, omp
+      pair build: half/bin/newton/omp
+      stencil: half/bin/3d
+      bin: standard
+WARNING: Communication cutoff 5.12246152962189 is shorter than a bond length based estimate of 5.455. This may lead to errors. (src/comm.cpp:723)
+Per MPI rank memory allocation (min/avg/max) = 1861 | 1861 | 1861 Mbytes
+   Step          Temp         Enthalpy         c_1      
+         0   0              13.256498      40.023219    
+      1000   0.97202651     18.836011      39.160542    
+      2000   1.0531379      20.032702      38.170487    
+      3000   0.95025174     19.406552      37.636349    
+      4000   0.98300037     20.212206      37.195658    
+      5000   0.97380489     20.123297      36.904519    
+      6000   0.92341359     19.409945      36.457004    
+      7000   1.0288477      19.646095      36.001985    
+      8000   0.98042322     20.207314      35.550751    
+      9000   1.0415557      20.740245      35.468582    
+     10000   0.96982949     20.170971      35.509815    
+     11000   1.0504712      20.428896      35.256422    
+     12000   1.0105764      20.095         35.042509    
+     13000   0.97156181     19.683646      34.806072    
+     14000   1.0405596      20.838967      34.857445    
+     15000   0.97921255     20.649737      34.68989     
+     16000   0.97158673     20.464841      34.343489    
+     17000   1.0280844      20.437377      34.471156    
+     18000   0.99978173     20.162483      34.094912    
+     19000   0.97865901     20.441755      33.690718    
+     20000   0.9712571      20.220962      33.404161    
+     21000   0.95438378     20.462074      33.272874    
+     22000   1.0131455      20.62339       32.785443    
+     23000   1.0574498      20.78296       32.696392    
+     24000   1.0528758      21.262822      32.338837    
+     25000   0.92921826     20.527938      32.118811    
+     26000   0.97984721     20.636687      31.970886    
+     27000   1.0315636      20.204272      31.65732     
+     28000   0.96625447     20.541469      31.55623     
+     29000   1.0029865      20.357783      31.706632    
+     30000   1.0641263      20.287362      31.807135    
+     31000   0.99073833     20.746177      31.282944    
+     32000   0.97544935     20.165138      31.197187    
+     33000   0.94914412     20.771577      31.475478    
+     34000   0.94047747     20.111027      31.411709    
+     35000   1.0573293      20.614023      31.469668    
+     36000   1.0506306      20.719127      31.164958    
+     37000   1.0096153      21.337125      31.068927    
+     38000   0.98048365     20.075297      30.876157    
+     39000   1.0110683      21.306928      30.675202    
+     40000   1.027433       20.484686      30.51646     
+     41000   1.0156875      21.223241      30.537092    
+     42000   1.0020811      20.348198      30.088873    
+     43000   1.049981       20.749909      29.927747    
+     44000   0.98253163     20.327729      29.792236    
+     45000   0.92532348     19.775808      29.657407    
+     46000   0.99251462     20.089513      29.585519    
+     47000   0.99299727     20.23875       29.504607    
+     48000   0.9869029      19.972906      29.596815    
+     49000   1.0288112      20.757359      29.604487    
+     50000   0.98235967     20.455714      29.138118    
+     51000   0.99186567     20.183106      29.147647    
+     52000   1.0218429      19.97684       29.042913    
+     53000   0.98148765     20.754268      28.78973     
+     54000   1.0416445      20.832025      28.621059    
+     55000   1.0370725      21.083432      28.371707    
+     56000   0.99151757     20.019595      28.275699    
+     57000   1.049072       20.259509      28.363365    
+     58000   1.014415       20.817686      28.407281    
+     59000   0.97692946     20.913911      27.745549    
+     60000   1.0343063      20.89369       27.124551    
+     61000   0.97400179     20.241659      27.066829    
+     62000   1.0075102      20.199879      26.977416    
+     63000   1.094213       20.476491      26.926243    
+     64000   1.0271872      20.378155      26.721098    
+     65000   1.0377363      19.807945      26.740098    
+     66000   1.0197447      20.546768      26.556546    
+     67000   1.0336312      20.382157      26.271335    
+     68000   1.1031467      20.741278      26.395314    
+     69000   1.0092296      21.08627       26.132574    
+     70000   0.99580543     21.151729      25.989552    
+     71000   0.95919364     20.481492      25.923222    
+     72000   1.0034779      20.93861       25.497876    
+     73000   0.9561118      20.739963      25.132426    
+     74000   1.0160496      20.452845      25.27874     
+     75000   1.0095017      20.941319      24.803902    
+     76000   0.98944091     20.743866      24.846513    
+     77000   0.96385856     19.955021      24.506622    
+     78000   0.99961853     20.34549       24.708504    
+     79000   0.95144602     20.273445      24.632596    
+     80000   1.0080019      20.189637      24.507986    
+     81000   1.0115166      20.548931      24.575501    
+     82000   1.0334029      21.032329      24.560799    
+     83000   0.96062953     20.084549      24.378772    
+     84000   1.0015726      20.716163      23.897952    
+     85000   0.99468313     20.011098      23.862637    
+     86000   0.97167077     19.772387      23.649751    
+     87000   1.0040182      20.471953      23.364017    
+     88000   0.97793497     20.105007      23.473512    
+     89000   0.93931614     20.17099       23.534175    
+     90000   1.0240991      20.74679       23.532283    
+     91000   1.0046703      21.154329      23.648734    
+     92000   0.96582352     20.18469       23.383676    
+     93000   0.97017035     20.332545      23.113502    
+     94000   0.95609074     20.253078      22.93911     
+     95000   1.0104511      20.159158      22.6636      
+     96000   0.98902781     21.276006      22.602998    
+     97000   0.95408154     20.235707      22.980935    
+     98000   1.0391213      20.523902      23.039149    
+     99000   0.98062352     20.390946      22.707246    
+    100000   0.98141129     20.270874      22.383753    
+Loop time of 186.787 on 2 procs for 100000 steps with 497 atoms
+
+Performance: 462559.010 tau/day, 535.369 timesteps/s
+102.8% CPU use with 1 MPI tasks x 2 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 0.75957    | 0.75957    | 0.75957    |   0.0 |  0.41
+Bond    | 0.93995    | 0.93995    | 0.93995    |   0.0 |  0.50
+Neigh   | 182.61     | 182.61     | 182.61     |   0.0 | 97.76
+Comm    | 0.017879   | 0.017879   | 0.017879   |   0.0 |  0.01
+Output  | 0.20889    | 0.20889    | 0.20889    |   0.0 |  0.11
+Modify  | 2.1146     | 2.1146     | 2.1146     |   0.0 |  1.13
+Other   |            | 0.1369     |            |       |  0.07
+
+Nlocal:            497 ave         497 max         497 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:           7407 ave        7407 max        7407 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 7407
+Ave neighs/atom = 14.903421
+Ave special neighs/atom = 1.9959759
+Neighbor list builds = 1125
+Dangerous builds = 0
+
+# Replace lj potential, now collapse
+pair_style      lj/cut 3
+
+# Cutoff simul when gyration under 7
+# Variable created with equal requires v_ + 'name'
+fix 3 all halt 1000 v_rog < 7
+
+run 3000000
+Generated 0 of 0 mixed pair_coeff terms from geometric mixing rule
+Last active /omp style is angle_style cosine/omp
+Per MPI rank memory allocation (min/avg/max) = 1861 | 1861 | 1861 Mbytes
+   Step          Temp         Enthalpy         c_1      
+    100000   0.98141129     19.16445       22.383753    
+    101000   1.0079714      18.820752      22.36891     
+    102000   1.0633108      19.234357      22.073073    
+    103000   0.95723453     18.718045      21.951726    
+    104000   1.0945852      19.66341       21.631976    
+    105000   0.94380447     17.794355      21.10217     
+    106000   1.017299       18.880913      20.744317    
+    107000   1.0489617      18.326386      20.650726    
+    108000   1.0702098      17.727877      20.278312    
+    109000   1.0594124      18.389577      19.93695     
+    110000   0.94748008     17.674739      19.803425    
+    111000   1.0103448      17.341776      19.642518    
+    112000   1.0384022      17.395526      19.331708    
+    113000   1.01778        18.274791      19.108505    
+    114000   1.0230254      18.843067      18.882754    
+    115000   1.0214683      17.988543      18.699789    
+    116000   1.0020236      18.865224      18.525251    
+    117000   0.98659177     18.196961      18.184631    
+    118000   1.0446619      19.499737      18.24289     
+    119000   1.007285       17.523659      17.980515    
+    120000   0.98027152     18.379404      17.92501     
+    121000   1.0004704      17.256386      18.021392    
+    122000   0.98031234     18.425195      18.168112    
+    123000   0.99654737     17.795998      18.164822    
+    124000   1.0757904      17.788133      17.815372    
+    125000   1.0229078      17.518202      17.625345    
+    126000   1.0049022      17.710892      17.421773    
+    127000   0.987765       18.066278      17.066741    
+    128000   0.99379655     18.234042      16.842865    
+    129000   1.0213874      18.825709      16.719053    
+    130000   1.0452714      18.300384      16.470362    
+    131000   1.0053417      17.711213      16.464368    
+    132000   1.037985       17.925289      16.469994    
+    133000   0.93626384     17.989528      16.350289    
+    134000   1.0143837      17.795192      16.275386    
+    135000   1.0152593      18.616472      16.067022    
+    136000   0.98670732     18.698641      15.999741    
+    137000   1.0310404      17.586287      15.792434    
+    138000   0.96712567     17.496283      15.758034    
+    139000   1.0265302      18.316257      15.655281    
+    140000   1.0705414      17.353986      15.398401    
+    141000   0.96369151     17.207782      15.258378    
+    142000   0.96682176     17.550081      14.884864    
+    143000   0.99823682     18.191583      14.984386    
+    144000   0.92961942     18.033727      14.947454    
+    145000   0.94998198     18.042289      14.338736    
+    146000   1.0353496      18.460119      13.854223    
+    147000   1.0337974      18.13715       13.680048    
+    148000   0.96780168     17.96623       13.574922    
+    149000   1.0138449      17.758836      13.313739    
+    150000   0.98617826     17.132889      13.254986    
+    151000   1.0397533      17.53381       13.181709    
+    152000   0.9912553      17.782387      13.203666    
+    153000   0.93693277     18.038161      13.335045    
+    154000   0.93983804     17.752063      13.328783    
+    155000   0.9670169      17.336542      13.108152    
+    156000   1.0527044      18.117146      12.918366    
+    157000   1.0223517      17.477976      12.754296    
+    158000   0.95660716     18.274411      12.586081    
+    159000   0.9446262      18.059648      12.529708    
+    160000   1.0204214      18.062467      12.353577    
+    161000   0.969275       17.059353      12.24748     
+    162000   1.0544685      17.748435      12.063179    
+    163000   1.0288621      17.438565      11.805579    
+    164000   1.0084035      17.314502      11.81891     
+    165000   0.96702903     17.097799      11.545201    
+    166000   1.0771761      17.67341       11.51005     
+    167000   1.0257976      18.491957      11.328292    
+    168000   0.96227452     16.559124      11.171951    
+    169000   1.0789324      17.868374      10.75841     
+    170000   1.054267       16.855508      10.548908    
+    171000   1.0346265      17.739259      10.208083    
+    172000   1.0279089      17.489616      9.8600183    
+    173000   1.051629       17.005004      9.8501527    
+    174000   0.97536899     17.422043      9.6534798    
+    175000   1.0065131      17.795829      9.7015887    
+    176000   0.98382138     17.107794      9.6430231    
+    177000   1.0313232      18.145313      9.3483505    
+    178000   1.0214052      17.834089      9.4433194    
+    179000   1.0240363      17.958485      9.5153225    
+    180000   0.9826417      16.9317        9.3083864    
+    181000   0.96424742     17.643523      8.8876759    
+    182000   1.0096723      18.171276      8.9760861    
+    183000   1.0080398      17.661606      8.7869771    
+    184000   1.0317937      17.422257      8.4608639    
+    185000   1.0837185      17.659712      8.2033282    
+    186000   1.016225       16.562324      8.1898611    
+    187000   0.96654945     17.369341      7.9833507    
+    188000   1.0009469      17.414603      7.6369676    
+    189000   0.93683404     17.682168      7.7186752    
+    190000   1.0605746      17.288246      7.7718816    
+    191000   1.0076789      16.77263       7.9186435    
+    192000   1.0022882      17.617901      8.1217846    
+    193000   0.99782568     16.950129      7.9901587    
+    194000   0.99674973     17.241734      7.8520931    
+    195000   1.0226602      17.191771      7.3414843    
+    196000   1.0217859      17.007625      7.3183376    
+    197000   1.0045329      16.922209      7.1316072    
+    198000   1.0652744      17.384525      7.2662184    
+    199000   1.049398       17.729043      7.0467313    
+Fix halt condition for fix-id 3 met on step 200000 with value 6.944668507906127 (src/fix_halt.cpp:237)
+    200000   1.0209414      17.803886      6.9446685    
+Loop time of 66.4187 on 2 procs for 100000 steps with 497 atoms
+
+Performance: 1300837.574 tau/day, 1505.599 timesteps/s
+122.8% CPU use with 1 MPI tasks x 2 OpenMP threads
+
+MPI task timing breakdown:
+Section |  min time  |  avg time  |  max time  |%varavg| %total
+---------------------------------------------------------------
+Pair    | 10.934     | 10.934     | 10.934     |   0.0 | 16.46
+Bond    | 0.97682    | 0.97682    | 0.97682    |   0.0 |  1.47
+Neigh   | 51.988     | 51.988     | 51.988     |   0.0 | 78.27
+Comm    | 0.019149   | 0.019149   | 0.019149   |   0.0 |  0.03
+Output  | 0.20548    | 0.20548    | 0.20548    |   0.0 |  0.31
+Modify  | 2.1469     | 2.1469     | 2.1469     |   0.0 |  3.23
+Other   |            | 0.1486     |            |       |  0.22
+
+Nlocal:            497 ave         497 max         497 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Nghost:              0 ave           0 max           0 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+Neighs:          59641 ave       59641 max       59641 min
+Histogram: 1 0 0 0 0 0 0 0 0 0
+
+Total # of neighbors = 59641
+Ave neighs/atom = 120.00201
+Ave special neighs/atom = 1.9959759
+Neighbor list builds = 773
+Dangerous builds = 0
+
+# This simulation is done
+# Move onto the next one
+clear
+  using 2 OpenMP thread(s) per MPI task
+package omp 0
+using multi-threaded neighbor list subroutines
+next f
+jump SELF
+
+###
+# Reference paper:
+# K. Kremer and G. S. Grest
+# Dynamics of entangled linear polymer melts: A molecular-dynamics simulation
+# J Chem Phys 92, 5057 (1990)
+
+##################################
+# MIHIR: for branched polymers
+# LJ minimum first to expand and explore, then collapse
+###
+
+###
+# Looping through the various N5B4 polymers to simulate,
+# define variables to switch through
+variable f index bb37nuc5bl6bn4d30tot100V2 bb75nuc5bl12bn4d30tot200V2 bb112nuc5bl18bn4d30tot300V2 bb150nuc5bl25bn4d30tot400V2 bb187nuc5bl31bn4d30tot500V2 bb225nuc5bl37bn4d30tot600V2 bb262nuc5bl43bn4d30tot700V2 bb300nuc5bl50bn4d30tot800V2 bb337nuc5bl56bn4d30tot900V2 bb375nuc5bl62bn4d30tot1000V2 bb412nuc5bl68bn4d30tot1100V2 bb450nuc5bl75bn4d30tot1200V2
+# variable f index bb37nuc5bl6bn4d30tot100 bb75nuc5bl12bn4d30tot200 bb112nuc5bl18bn4d30tot300 bb150nuc5bl25bn4d30tot400 bb187nuc5bl31bn4d30tot500 bb225nuc5bl37bn4d30tot600 bb262nuc5bl43bn4d30tot700 bb300nuc5bl50bn4d30tot800 bb337nuc5bl56bn4d30tot900 bb375nuc5bl62bn4d30tot1000 bb412nuc5bl68bn4d30tot1100 bb450nuc5bl75bn4d30tot1200
+# variable f index bb75nuc5bl12bn4d30tot200
+# variable f index bb337nuc5bl56bn4d30tot900
+###
+
+
+###
+# Box and units  (use LJ units and periodic boundaries)
+###
+
+units lj
+log N5B4/trial2/logs/$f.log
+log N5B4/trial2/logs/bb225nuc5bl37bn4d30tot600V2.log

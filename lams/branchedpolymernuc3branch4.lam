@@ -1,0 +1,253 @@
+
+###
+# Reference paper:
+# K. Kremer and G. S. Grest
+# Dynamics of entangled linear polymer melts: A molecular-dynamics simulation
+# J Chem Phys 92, 5057 (1990)
+
+##################################
+# MIHIR: for branched polymers
+# LJ minimum first to expand and explore, then collapse
+###
+
+###
+# Looping through the various N3B4 polymers to simulate,
+# define variables to switch through
+# unhighlight one of the rows below, depending on the trial (indicated by V at the end)
+#variable f index bb40nuc3bl10bn4d30tot100 bb80nuc3bl20bn4d30tot200 bb120nuc3bl30bn4d30tot300 bb160nuc3bl40bn4d30tot400 bb200nuc3bl50bn4d30tot500 bb240nuc3bl60bn4d30tot600 bb280nuc3bl70bn4d30tot700 bb320nuc3bl80bn4d30tot800 bb360nuc3bl90bn4d30tot900 bb400nuc3bl100bn4d30tot1000 bb440nuc3bl110bn4d30tot1100 bb480nuc3bl120bn4d30tot1200
+#variable f index bb40nuc3bl10bn4d30tot100V2 bb80nuc3bl20bn4d30tot200V2 bb120nuc3bl30bn4d30tot300V2 bb160nuc3bl40bn4d30tot400V2 bb200nuc3bl50bn4d30tot500V2 bb240nuc3bl60bn4d30tot600V2 bb280nuc3bl70bn4d30tot700V2 bb320nuc3bl80bn4d30tot800V2 bb360nuc3bl90bn4d30tot900V2 bb400nuc3bl100bn4d30tot1000V2 bb440nuc3bl110bn4d30tot1100V2 bb480nuc3bl120bn4d30tot1200V2
+#variable f index bb40nuc3bl10bn4d30tot100V3 bb80nuc3bl20bn4d30tot200V3 bb120nuc3bl30bn4d30tot300V3 bb160nuc3bl40bn4d30tot400V3 bb200nuc3bl50bn4d30tot500V3 bb240nuc3bl60bn4d30tot600V3 bb280nuc3bl70bn4d30tot700V3 bb320nuc3bl80bn4d30tot800V3 bb360nuc3bl90bn4d30tot900V3 bb400nuc3bl100bn4d30tot1000V3 bb440nuc3bl110bn4d30tot1100V3 bb480nuc3bl120bn4d30tot1200V3
+###
+
+
+###
+# Box and units  (use LJ units and periodic boundaries)
+###
+
+units lj
+log N3B4/trial3/logs3/$f.log
+#atom_style bond #no stiffness
+atom_style angle #with stiffness
+
+boundary        p p p
+###
+# Pair interactions require lists of neighbours to be calculated
+###
+
+#neighbor 0.3 bin
+neighbor 4 bin
+
+neigh_modify every 1 delay 1 check yes
+atom_modify sort 0 0
+### Generate RESTART file, SPECIAL format, not a .txt file ###
+### Useful if simulation crashes ###
+
+restart 1000000 N3B4/trial3/restarts3/$f.restart
+#############################
+
+
+
+### READ "start" data file ###
+
+read_data N3B4/trial3/dats3/$f.dat
+
+######################
+
+### READ "REstart" data file ###
+
+######################
+
+
+
+###
+# Define groups (atom type 1 is group 'all')
+###
+group all type 1
+
+
+###
+# Dump configs - "simple dumpings"
+###
+
+###
+# Dump configs + box coords
+###
+
+dump   1   all   custom   1000  N3B4/trial3/trjs3/$f.lammpstrj  id  x y z  ix iy iz
+dump_modify   1   format line "%d %.5f %.5f %.5f %d %d %d"
+
+########################################################################
+
+
+###################################################################
+# Stiffness term
+#
+# E = K * (1+cos(theta)), K>0
+#
+angle_style   cosine
+#change this coefficient to change stiffness (e.g. 1,5,10)
+angle_coeff   1 1.0
+###################################################################
+
+###################################################################
+# Pair interaction between non-bonded atoms
+#
+#  Lennard-Jones 12-6 potential with cutoff:
+#  potential E=4epsilon[ (sigma/r)^12 - (sigma/r)^6]  for r<r_cut
+#
+#  1.12246 = 2^(1/6) is the minimum of the potential
+
+
+pair_style      lj/cut 1.12246152962189
+#pair_style      lj/cut 3
+
+#
+#  pair_modify shift yes adds a constant to the potential such
+
+#  that E(r_cut)=0. Forces remains unchanged.
+#
+
+pair_modify     shift yes
+
+#
+#  pair_coeff for lj/cut, specify 4:
+#    * atom type interacting with
+#    * atom type
+#    * epsilon (energy units)
+#    * sigma (distance units)
+#
+
+pair_coeff      1 1 1.0 1.0
+###################################################################
+
+###################################################################
+# Pair interaction between non-bonded atoms
+#
+#  soft potential, for PUSHING apart overlapping atoms
+#  potential E=A*(1 + cos(pi*r/r_c))
+#
+#  1.12246 = 2^(1/6) is the cut-off r_c
+
+#pair_style     soft 1.12246152962189
+
+#
+#  pair_coeff for soft, specify 3:
+#    * atom type interacting with
+#    * atom type
+#    * A
+#
+#
+
+#pair_coeff      1 1 100.0
+###################################################################
+
+###################################################################
+# Pair interaction between bonded atoms
+#
+# Fene potential + Lennard Jones 12-6:
+
+#
+#  E= - 0.5 K R0^2 ln[ 1- (r/R0)^2]
+#     + 4epsilon[ (sigma/r)^12 - (sigma/r)^6] + epsilon
+#
+
+bond_style   fene
+
+
+#
+# For style fene, specify:
+#   * bond type
+#   * K (energy/distance^2)
+#   * R0 (distance)
+#   * epsilon (energy)  (LJ component)
+#   * sigma (distance)  (LJ component)
+#
+
+
+special_bonds fene #<=== I M P O R T A N T (new command)
+
+bond_coeff   1   30   2   1.0   1.0
+
+
+###################################################
+
+###################################################################
+# Pair interaction between bonded atoms
+#
+# Harmonic potential:
+#
+#  E= K * (R-R0)^2
+#
+
+#bond_style   harmonic
+
+#
+# For style harmonic, specify:
+#   * bond type
+#   * K (energy/distance^2)
+#   * R0 (distance)
+#
+
+#bond_coeff   1   60.0   1.0
+#bond_coeff   2   harmonic 0.1   1.0
+
+###################################################
+compute 1 all gyration
+variable rog equal c_1
+#compute 2 all coord/atom cutoff 1.1
+
+#dump 2 all custom 10000 contact_number.dump id c_2
+
+
+###
+# Set up fixes
+###
+thermo_style   custom   step  temp enthalpy c_1
+fix 1 all nve   ###NVE ensemble
+
+fix 2 all   langevin   1.0 1.0 1.0  778655   ###Langevin integrator Tstart Tstop 1/friction rndseed
+
+
+##### Sample thermodynamic info  (temperature, energy, pressure, etc.) #####
+thermo 1000
+
+
+
+
+
+
+
+
+
+############################################################################
+
+###
+# set timestep of integrator
+
+timestep 0.01
+
+###
+# run integration for a number of steps
+###
+#run 0
+#variable r equal c_1
+#if "$r < 63.1" then "quit 1"
+
+# lj potential minimum, cause molecule to explore
+run 100000
+
+# Replace lj potential, now collapse
+pair_style      lj/cut 3
+
+# Cutoff simul when gyration under 7
+# Variable created with equal requires v_ + 'name'
+fix 3 all halt 1000 v_rog < 7
+
+run 3000000
+
+# This simulation is done
+# Move onto the next one
+clear
+next f
+jump SELF 
+
