@@ -5,6 +5,7 @@ A framework to build LAMMPS-friendly branched polymer architectures, and then si
 ## Organization
 
 | Quick details | -- |
+| ----------- | --------- |
 | Polymer Types (polymer architectures) |  `Linear` `N1B3` `N1B4` `N1B5` `N3B4` `N5B4` `N7B4` |
 | Data Files (LAMMPS-friendly format for polymers in 3D space) | `\dats2` --> `.dat` |
 | Log Files (Storage of LAMMPS output in console, including some measurements) | `\logs` --> `.log` |
