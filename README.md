@@ -1,23 +1,24 @@
-# BranchedPolymerCompaction
-A framework to build LAMMPS-friendly branched polymer architectures, and then simulate the coil-globule transition through LAMMPS
-
+# Network-and-Branch-Simulations
+Code Repository for the Article: "Decoding Network Complexity: Harnessing the Power of Simulations to Illuminate Dynamic Interactions in Networks and Branches"
 
 ## Organization
 
 | Quick details | -- |
 | ----------- | --------- |
 | Polymer Types (polymer architectures) |  `Linear` `N1B3` `N1B4` `N1B5` `N3B4` `N5B4` `N7B4` |
-| Data Files (LAMMPS-friendly format for polymers in 3D space) | `\dats2` --> `.dat` |
-| Log Files (Storage of LAMMPS output in console, including some measurements) | `\logs` --> `.log` |
-| Root Mean Square Distances Files (`BranchedPolymerANalysis.ipynb` generated RMSD measurements) | `\rmsds` --> `.txt` |
-| Trajectories (LAMMPS output simulation information for each polymer) | `\trjs` --> `.lammpstrj` |
+| Data Files (LAMMPS-friendly format for seafans or polymers in 3D space) | Polymer: `\dats2` --> `.dat` |
+| Log Files (Storage of LAMMPS output in console, including some measurements) | Polymer: `\logs` --> `.log` |
+| Root Mean Square Distances Files [Polymers only] (`BranchedPolymerANalysis.ipynb` generated RMSD measurements) | `\rmsds` --> `.txt` |
+| Trajectories (LAMMPS output simulation information for each polymer) | Polymer: `\trjs` --> `.lammpstrj` |
 
 - `/lams` includes all of the files for running the LAMMPS simulations
-- `/data` includes all polymer data, broken down by polymer types and then trial. Only trial2 is available here to preserve storage limits (ex. `/data/N1B5/trial2`)
-- For each polymer type
-- `BranchedPolymerAnalysis.ipynb` is the notebook summarizing all commands, including a comprehensive analysis pipeline
+- `/data` includes all polymer data, broken down by polymer types and then trial. Only trial2 is available for each polymer type here to preserve storage limits (ex. `Polymers/data/N1B5/trial2`)
+- For Polymers, `BranchedPolymerAnalysis.ipynb` is the notebook summarizing all commands, including a comprehensive analysis pipeline
 
-## Execution 
+## Seafans Execution
+
+
+## Polymers Execution 
 
 Instructions are below for downloading the softwares used in the project and working with the files in this repository. 
 
@@ -50,7 +51,8 @@ These simulations can take a while, with the larger n (1000, 1100, 1200) taking 
 Finally, the `BranchedPolymerAnalysis.ipynb` notebook then can be run for all analyses of outputs. 
 
 ## Contact
-Much of this procedure and information is distilled, as a byproduct of research I conducted throughout college. If you'd like more information, feel free to contact me @`cybercyclonedude@gmail.com`!
+Much of this procedure and information is distilled.
+For more information, please contact us authors @`avlad@college.harvard.edu` and @`mihirgwd@gmail.com`!
 
 
 
