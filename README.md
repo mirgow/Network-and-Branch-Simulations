@@ -17,6 +17,22 @@ Code Repository for the Article: "Decoding Network Complexity: Harnessing the Po
 
 ## Seafans Execution
 
+Instructions are below for downloading the softwares used in the project and working with the files in this repository. 
+
+All the simulations are ran with LAMMPS in the command line. The executable for the simulation software can be downloaded from [LAMMPS](https://www.lammps.org), either for Windows or Apple OS. The LAMMPS files have the `.lam` extension and contain information about the force-field, sea fan structure, and timesteps. *Peek at them! There's valuable notes in them for what is running!*
+
+With the software installed well, the simulations can be run with the following command line:
+
+```
+lmp_serial -in lammps_file.lam 
+
+```
+
+lmp_serial is the standard LAMMPS command to run on a single processor (which was reasonable for our purpose). LAMMPS can also be built to run in parallel if needed. 
+
+These simulations take, on average, one hour (~2000 atoms, 1000000 timesteps). *Your machine can't stop midway through simulation!*
+
+The output file, which is chosen in the `.lam` file, contains all the information about each atom's position at every timestep. We use this file to run all the analysis in Python. The notebook `SeaFansAnalysis.ipynb` contains the commands needed to generate the data files, read the output data, and perform the analysis.  
 
 ## Polymers Execution 
 
