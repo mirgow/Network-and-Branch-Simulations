@@ -11,7 +11,7 @@ Code Repository for the Article: "Decoding Network Complexity: Harnessing the Po
 | Log Files [Polymers only] (Storage of LAMMPS output in console, including some measurements) |`\logs` --> `.log` |
 | Root Mean Square Distances Files [Polymers only] (`BranchedPolymerANalysis.ipynb` generated RMSD measurements) | `\rmsds` --> `.txt` |
 | Mean Square Distances Files [Sea Fans only] (LAMMPS generated MSD measurements) | `\msds` --> `.txt` |
-| Trajectories (LAMMPS output simulation information for each polymer) | Polymer: `\trjs` --> `.lammpstrj` Sea Fan: `trjs` --> `.lammpstrj`|
+| Trajectories (LAMMPS output simulation information for each polymer) | Polymer: `\trjs` --> `.lammpstrj` Sea Fan: `\trjs` --> `.lammpstrj`|
 
 - `/lams` includes all of the files for running the LAMMPS simulations
 - `/data` includes all simulation data, broken down by sea fan morphology or by polymer types and then trial. Only trial2 is available for each polymer type here to preserve storage limits (ex. `Polymers/data/N1B5/trial2`)
