@@ -6,14 +6,17 @@ Code Repository for the Article: "Decoding Network Complexity: Harnessing the Po
 | Quick details | -- |
 | ----------- | --------- |
 | Polymer Types (polymer architectures) |  `Linear` `N1B3` `N1B4` `N1B5` `N3B4` `N5B4` `N7B4` |
-| Data Files (LAMMPS-friendly format for seafans or polymers in 3D space) | Polymer: `\dats2` --> `.dat` |
-| Log Files (Storage of LAMMPS output in console, including some measurements) | Polymer: `\logs` --> `.log` |
+| Sea Fan Types (sea fan topologies) | `Tree` `Network` |
+| Data Files (LAMMPS-friendly format for seafans or polymers in 3D space) | Polymer: `\dats2` --> `.dat` Sea Fan: `\data` --> `.txt`|
+| Log Files [Polymers only] (Storage of LAMMPS output in console, including some measurements) |`\logs` --> `.log` |
 | Root Mean Square Distances Files [Polymers only] (`BranchedPolymerANalysis.ipynb` generated RMSD measurements) | `\rmsds` --> `.txt` |
-| Trajectories (LAMMPS output simulation information for each polymer) | Polymer: `\trjs` --> `.lammpstrj` |
+| Mean Square Distances Files [Sea Fans only] (LAMMPS generated MSD measurements) | `\msds` --> `.txt` |
+| Trajectories (LAMMPS output simulation information for each polymer) | Polymer: `\trjs` --> `.lammpstrj` Sea Fan: `trjs` --> `.lammpstrj`|
 
 - `/lams` includes all of the files for running the LAMMPS simulations
-- `/data` includes all polymer data, broken down by polymer types and then trial. Only trial2 is available for each polymer type here to preserve storage limits (ex. `Polymers/data/N1B5/trial2`)
+- `/data` includes all simulation data, broken down by sea fan morphology or by polymer types and then trial. Only trial2 is available for each polymer type here to preserve storage limits (ex. `Polymers/data/N1B5/trial2`)
 - For Polymers, `BranchedPolymerAnalysis.ipynb` is the notebook summarizing all commands, including a comprehensive analysis pipeline
+- For Sea Fans, `SeaFansAnalysis.ipynb` is the notebook creating the input data files and performing the analysis
 
 ## Seafans Execution
 
