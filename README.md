@@ -52,7 +52,7 @@ Finally, the `BranchedPolymerAnalysis.ipynb` notebook then can be run for all an
 
 ## Contact
 Much of this procedure and information is distilled.
-For more information, please contact us authors @`avlad@college.harvard.edu` and @`mihirgwd@gmail.com`!
+For more information, please contact us authors @`avlad@college.harvard.edu` and @`mihirgwd@gmail.com`.
 
 
 
